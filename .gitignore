@@ -1,0 +1,11 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.userossc
+Debug/
+Release/
+appsettings.Development.json
+.DS_Store
+Thumbs.db
