@@ -47,9 +47,22 @@ class MLPredictionService:
 
         # ... (previous inference code) ...
         
-        days_remaining = int(round(self.harvest_model.predict(inference_df)[0]))
-        biomass_tons = round(float(self.biomass_model.predict(inference_df)[0]), 1)
+        # --- POST-PROCESSING GUARD 1: Over-Mature Crop Physical Cap ---
+        if days_since_sowing >= 140:
+            days_remaining = 0
+        else:
+            raw_days_remaining = int(round(self.harvest_model.predict(inference_df)[0]))
+            days_remaining = max(1, raw_days_remaining)
+
         harvest_date = (datetime.now() + timedelta(days=days_remaining)).strftime("%d %b %Y")
+
+        # --- POST-PROCESSING GUARD 2: Physical Zero/Negative Acreage Rule ---
+        farm_area_val = float(farm_data.get("farm_area", 0))
+        if farm_area_val <= 0:
+            biomass_tons = 0.0
+        else:
+            raw_biomass = float(self.biomass_model.predict(inference_df)[0])
+            biomass_tons = round(max(0.0, raw_biomass), 1)
 
         # --- DYNAMIC CONFIDENCE CALCULATION ---
         base_confidence = 96
